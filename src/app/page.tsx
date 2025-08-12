@@ -1,18 +1,28 @@
 import Container from "@/components/container";
 import Footer from "@/components/footer";
+import Link from "next/link";
+import { Slider } from "@/components/ui/slider"
+import { CarouselDemo } from "@/components/slider";
 export default function Home() {
   return (
     <>
-      <header className="relative header bg-cover bg-center h-[70vh] w-full flex items-center justify-center">
+      <header className="bgImageHeader bg-cover bg-center h-[80vh] w-full flex items-center justify-center">
         <h1 className="font-bold text-5xl text-white text-shadow-white">
           new verse
         </h1>
       </header>
-      <main className="newVerseIcon bg-cover bg-center w-full flex items-center justify-center">
-            <Container>
-          <div className="xl:mx-90 lg:mx-40 md:mx-20 mx-5 py-10 text-white">
-            <h2 className="font-bold text-2xl py-10">Lorem ipsum dolor </h2>
-            <p>
+      <main className="newVerseIcon bg-cover bg-center newVerseIcon">
+          <div className="xl:mx-90 min-[850px]:max-[1500px]:mx-70 lg:mx:60 md:mx-30 sm:mx-20 px-5 py-10 bg-primary text-white leading-8">
+          <div>
+            <div className="flex items-center ">
+              <img
+                src="/images/new-verse-icon.jpg"
+                alt="icon"
+                className="w-20 h-20"
+              />
+              <h2 className="font-bold text-2xl py-10">Lorem ipsum dolor </h2>
+            </div>
+            <p className="">
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe
               mollitia omnis voluptatibus ullam distinctio vitae, ipsa,
               voluptate deserunt, voluptatem tempora porro? Pariatur earum eaque
@@ -27,7 +37,17 @@ export default function Home() {
               voluptatem eveniet! Ex, dolorum.
             </p>
           </div>
-            </Container>
+          <div>
+            <h2 className="font-bold text-2xl py-10">my producer : </h2>
+            <p>
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloribus
+              facere amet iste accusantium exercitationem corporis earum error,
+              deserunt ab atque commodi dolor obcaecati tenetur! Fugit ratione
+              cumque sint cum nemo.<Link href='/producer'>more </Link>
+            </p>
+          </div>
+          <CarouselDemo/>
+          </div>
       </main>
       <Footer />
     </>
