@@ -2,16 +2,17 @@ import Container from '@/components/container'
 import MusicPlayer from '@/components/musicPlayer'
 import Link from 'next/link'
 import React from 'react'
-
+import musics from '@/utils/utils'
 const PlayList = () => {
   return (
     <Container>
       <div className='pt-15'>
-        <Link href={'/playList/1'}>
-          <MusicPlayer
-          src="/musics/bbalTarik.mp3"
+        {musics.map(music => (
+          <MusicPlayer key={music.id}
+          src={music.src}
+          id={music.id}
           />
-        </Link>
+        ))}
       </div>
 
     </Container>

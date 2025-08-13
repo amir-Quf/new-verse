@@ -3,12 +3,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import * as mm from "music-metadata-browser";
 import { Play, Pause, Download } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-interface MusicPlayerProps {
+interface IMusicPlayerProps {
   src: string;
+  id: number;
 }
 
-export default function MusicPlayer({ src }: MusicPlayerProps) {
+export default function MusicPlayer({ src, id }: IMusicPlayerProps) {
+  const router = useRouter();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -24,21 +27,21 @@ export default function MusicPlayer({ src }: MusicPlayerProps) {
         const response = await fetch(src);
         const arrayBuffer = await response.arrayBuffer();
 
-        // خواندن متادیتا
-        const metadata = await mm.parseBuffer(new Uint8Array(arrayBuffer), "audio/mpeg");
+        const metadata = await mm.parseBuffer(
+          new Uint8Array(arrayBuffer),
+          "audio/mpeg"
+        );
         setTrackTitle(metadata.common.title || "Unknown Track");
         setArtistName(metadata.common.artist || "Unknown Artist");
 
-        if (metadata.common.picture && metadata.common.picture.length > 0) {
+        if (metadata.common.picture?.length) {
           const picture = metadata.common.picture[0];
           const blob = new Blob([picture.data], { type: picture.format });
           setCoverUrl(URL.createObjectURL(blob));
         }
 
-        // ساخت blob URL برای پخش و دانلود
         const audioBlob = new Blob([arrayBuffer], { type: "audio/mpeg" });
-        const url = URL.createObjectURL(audioBlob);
-        setBlobUrl(url);
+        setBlobUrl(URL.createObjectURL(audioBlob));
       } catch (error) {
         console.error("Error reading metadata:", error);
       }
@@ -51,34 +54,32 @@ export default function MusicPlayer({ src }: MusicPlayerProps) {
     };
   }, [src]);
 
-  const togglePlay = () => {
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation(); // جلوگیری از هدایت
     if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
-    }
+    isPlaying ? audioRef.current.pause() : audioRef.current.play();
     setIsPlaying(!isPlaying);
   };
 
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      const dur = audioRef.current.duration;
-      if (!isNaN(dur)) setDuration(dur);
-    }
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation(); // جلوگیری از هدایت
+    if (!blobUrl) return;
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = trackTitle + ".mp3";
+    link.click();
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation(); // جلوگیری از هدایت
     if (audioRef.current) {
       audioRef.current.currentTime = Number(e.target.value);
       setCurrentTime(Number(e.target.value));
     }
+  };
+
+  const handleSelectMusic = () => {
+    router.push(`/playList/${id}`);
   };
 
   const formatTime = (time: number) => {
@@ -90,28 +91,23 @@ export default function MusicPlayer({ src }: MusicPlayerProps) {
     return `${minutes}:${seconds}`;
   };
 
-  const handleDownload = () => {
-    if (!blobUrl) return;
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = trackTitle + ".mp3";
-    link.click();
-  };
+  const seekStopPropagationHandler = (e : React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+  }
 
   return (
     <div
-      className="relative p-4 rounded-lg text-white overflow-hidden"
+      className="relative p-4 rounded-lg text-white overflow-hidden my-4 cursor-pointer"
+      onClick={handleSelectMusic}
       style={{
         backgroundImage: coverUrl ? `url(${coverUrl})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
-      {/* بک‌گراند محو */}
-      <div className="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <div className="relative flex justify-between items-start z-10">
-        {/* اطلاعات ترک */}
         <div className="flex items-center gap-3">
           {coverUrl ? (
             <img
@@ -128,27 +124,23 @@ export default function MusicPlayer({ src }: MusicPlayerProps) {
           </div>
         </div>
 
-        {/* دکمه‌ها */}
         <div className="flex gap-3">
           <button
             onClick={togglePlay}
             className="bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded"
-            aria-label={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? <Pause size={20} /> : <Play size={20} />}
           </button>
           <button
             onClick={handleDownload}
             className="bg-green-500 hover:bg-green-600 px-3 py-1 rounded"
-            aria-label="Download"
           >
             <Download size={20} />
           </button>
         </div>
       </div>
 
-      {/* نوار پیشرفت */}
-      <div className="mt-4 relative z-10">
+      <div onClick={seekStopPropagationHandler} className="mt-4 relative z-10">
         <input
           type="range"
           min={0}
@@ -163,12 +155,16 @@ export default function MusicPlayer({ src }: MusicPlayerProps) {
         </div>
       </div>
 
-      {/* پلیر صوتی پنهان */}
       <audio
         ref={audioRef}
         src={blobUrl || undefined}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
+        onTimeUpdate={() =>
+          setCurrentTime(audioRef.current?.currentTime || 0)
+        }
+        onLoadedMetadata={() => {
+          const dur = audioRef.current?.duration;
+          if (dur && !isNaN(dur)) setDuration(dur);
+        }}
         preload="metadata"
       />
     </div>

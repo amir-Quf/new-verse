@@ -1,16 +1,13 @@
-import { notFound } from 'next/navigation'
-import React from 'react'
+import { notFound } from "next/navigation";
 
-const Track = async ({params} : {params: Promise<{id : string}>}) =>  {
-  const {id} = await params
-  if(parseInt(id) > 10){
-    notFound()
-  } 
-  return (
-    <div className=''>
-      <h1 className='pt-20 text-2xl text-white'>Music{id}</h1>
-    </div>
-  )
+interface MusicPageProps {
+  params: { id: string };
 }
 
-export default Track
+export default function MusicPage({ params }: MusicPageProps) {
+  if (parseInt(params.id) > 10) {
+    notFound();
+  }
+
+  return <div className="text-white text-2xl pt-15">music{params.id}</div>;
+}
