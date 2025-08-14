@@ -55,14 +55,14 @@ export default function MusicPlayer({ src, id }: IMusicPlayerProps) {
   }, [src]);
 
   const togglePlay = (e: React.MouseEvent) => {
-    e.stopPropagation(); // جلوگیری از هدایت
+    e.stopPropagation();
     if (!audioRef.current) return;
     isPlaying ? audioRef.current.pause() : audioRef.current.play();
     setIsPlaying(!isPlaying);
   };
 
   const handleDownload = (e: React.MouseEvent) => {
-    e.stopPropagation(); // جلوگیری از هدایت
+    e.stopPropagation();
     if (!blobUrl) return;
     const link = document.createElement("a");
     link.href = blobUrl;
@@ -71,7 +71,7 @@ export default function MusicPlayer({ src, id }: IMusicPlayerProps) {
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation(); // جلوگیری از هدایت
+    e.stopPropagation(); 
     if (audioRef.current) {
       audioRef.current.currentTime = Number(e.target.value);
       setCurrentTime(Number(e.target.value));
