@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import * as mm from "music-metadata-browser";
 import { Play, Pause, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { usePlayerStore } from "@/store/playerStore";
 
 interface IMusicPlayerProps {
   src: string;
@@ -21,6 +22,16 @@ export default function MusicPlayer({ src, id }: IMusicPlayerProps) {
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
+  const { currentPlayingId, setCurrentPlayingId } = usePlayerStore();
+
+  // هر زمان currentPlayingId تغییر کنه، اگر موزیک دیگه پلی شده بود استپ بشه
+  useEffect(() => {
+    if (currentPlayingId !== id && isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    }
+  }, [currentPlayingId]);
+
   useEffect(() => {
     async function fetchAndPrepare() {
       try {
@@ -36,7 +47,9 @@ export default function MusicPlayer({ src, id }: IMusicPlayerProps) {
 
         if (metadata.common.picture?.length) {
           const picture = metadata.common.picture[0];
-          const blob = new Blob([picture.data], { type: picture.format });
+          const blob = new Blob([new Uint8Array(picture.data)], {
+            type: picture.format,
+          });
           setCoverUrl(URL.createObjectURL(blob));
         }
 
@@ -57,8 +70,16 @@ export default function MusicPlayer({ src, id }: IMusicPlayerProps) {
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!audioRef.current) return;
-    isPlaying ? audioRef.current.pause() : audioRef.current.play();
-    setIsPlaying(!isPlaying);
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      setCurrentPlayingId(null);
+    } else {
+      setCurrentPlayingId(id); // بقیه موزیک‌ها استپ میشن
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
   };
 
   const handleDownload = (e: React.MouseEvent) => {
@@ -71,7 +92,7 @@ export default function MusicPlayer({ src, id }: IMusicPlayerProps) {
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     if (audioRef.current) {
       audioRef.current.currentTime = Number(e.target.value);
       setCurrentTime(Number(e.target.value));
@@ -91,9 +112,9 @@ export default function MusicPlayer({ src, id }: IMusicPlayerProps) {
     return `${minutes}:${seconds}`;
   };
 
-  const seekStopPropagationHandler = (e : React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation()
-  }
+  const seekStopPropagationHandler = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+  };
 
   return (
     <div
